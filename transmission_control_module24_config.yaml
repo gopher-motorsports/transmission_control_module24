@@ -1,0 +1,80 @@
+module_name: "TCM"
+
+buckets:
+    high_frequency_tcm:
+        frequency_hz: 1000
+        parameters:
+            gearPosition_mm:
+                ADC: ADC1_IN10
+                sensor: linear_pos_sensor_5
+                samples_buffered: 1
+            shifterPosition_mm:
+                ADC: ADC1_IN11
+                sensor: linear_pos_sensor_50
+                samples_buffered: 1
+            clutchPosition_mm:
+                ADC: ADC1_IN12
+                sensor: linear_pos_sensor_50
+                samples_buffered: 1
+            counterShaftSpeed_rpm:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1   
+    low_frequency_tcm:
+        frequency_hz: 1000
+        parameters:
+            tcmTargetRPM_rpm:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            tcmCurrentGear_state:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            tcmCurrentlyMoving_state:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            tcmAntiStallActive_state:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            tcmUsingClutch_state:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            tcmShiftState_state:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            tcmError_state:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+    very_low_frequency_tcm:
+        frequency_hz: 1000
+        parameters:
+            tcmTargetGear_state:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            tcmClutchlessDownshift_state:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            tcmTimeShiftOnly_state:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            tcmSpkCut_state:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            tcmSuccessfulShift_state:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            tcmNumSuccessfulShifts_ul:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
