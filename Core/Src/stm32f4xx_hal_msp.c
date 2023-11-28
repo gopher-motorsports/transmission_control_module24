@@ -99,15 +99,23 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
     __HAL_RCC_ADC1_CLK_ENABLE();
 
     __HAL_RCC_GPIOC_CLK_ENABLE();
+    __HAL_RCC_GPIOA_CLK_ENABLE();
     /**ADC1 GPIO Configuration
     PC0     ------> ADC1_IN10
     PC1     ------> ADC1_IN11
     PC2     ------> ADC1_IN12
+    PC3     ------> ADC1_IN13
+    PA1     ------> ADC1_IN1
     */
-    GPIO_InitStruct.Pin = GEAR_POS_POT_Pin|SHIFT_POT_Pin|CLUTCH_POT_Pin;
+    GPIO_InitStruct.Pin = GEAR_POS_POT_IN_Pin|SHIFT_POT_IN_Pin|CLUTCH_POT_IN_Pin|LOAD_CELL_IN_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = AUX1_T_IN_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(AUX1_T_IN_GPIO_Port, &GPIO_InitStruct);
 
     /* ADC1 DMA Init */
     /* ADC1 Init */
@@ -155,8 +163,12 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
     PC0     ------> ADC1_IN10
     PC1     ------> ADC1_IN11
     PC2     ------> ADC1_IN12
+    PC3     ------> ADC1_IN13
+    PA1     ------> ADC1_IN1
     */
-    HAL_GPIO_DeInit(GPIOC, GEAR_POS_POT_Pin|SHIFT_POT_Pin|CLUTCH_POT_Pin);
+    HAL_GPIO_DeInit(GPIOC, GEAR_POS_POT_IN_Pin|SHIFT_POT_IN_Pin|CLUTCH_POT_IN_Pin|LOAD_CELL_IN_Pin);
+
+    HAL_GPIO_DeInit(AUX1_T_IN_GPIO_Port, AUX1_T_IN_Pin);
 
     /* ADC1 DMA DeInit */
     HAL_DMA_DeInit(hadc->DMA_Handle);
@@ -262,14 +274,14 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base)
 
     __HAL_RCC_GPIOA_CLK_ENABLE();
     /**TIM2 GPIO Configuration
-    PA5     ------> TIM2_CH1
+    PA0-WKUP     ------> TIM2_CH1
     */
-    GPIO_InitStruct.Pin = TRANS_SPEED_Pin;
+    GPIO_InitStruct.Pin = TRANS_SPEED_IN_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStruct.Alternate = GPIO_AF1_TIM2;
-    HAL_GPIO_Init(TRANS_SPEED_GPIO_Port, &GPIO_InitStruct);
+    HAL_GPIO_Init(TRANS_SPEED_IN_GPIO_Port, &GPIO_InitStruct);
 
     /* TIM2 DMA Init */
     /* TIM2_CH1 Init */
@@ -339,9 +351,9 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* htim_base)
     __HAL_RCC_TIM2_CLK_DISABLE();
 
     /**TIM2 GPIO Configuration
-    PA5     ------> TIM2_CH1
+    PA0-WKUP     ------> TIM2_CH1
     */
-    HAL_GPIO_DeInit(TRANS_SPEED_GPIO_Port, TRANS_SPEED_Pin);
+    HAL_GPIO_DeInit(TRANS_SPEED_IN_GPIO_Port, TRANS_SPEED_IN_Pin);
 
     /* TIM2 DMA DeInit */
     HAL_DMA_DeInit(htim_base->hdma[TIM_DMA_ID_CC1]);

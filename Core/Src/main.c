@@ -568,14 +568,14 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, AUX1_T_Pin|GSENSE_LED_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, UPSHIFT_OUT_Pin|DOWNSHIFT_OUT_Pin|FAST_CLUTCH_OUT_Pin|SLOW_CLUTCH_OUT_Pin
+                          |DRS_OUT_Pin|EXTRA_OUT_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, DOWNSHIFT_SOL_Pin|CLUTCH_SOL_Pin|SLOW_CLUTCH_SOL_Pin|UPSHIFT_SOL_Pin
-                          |SPK_CUT_Pin|AUX1_C_Pin|HBEAT_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GSENSE_LED_GPIO_Port, GSENSE_LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, AUX2_C_Pin|FAULT_LED_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, AUX2_C_PASS_Pin|SPK_CUT_OUT_Pin|FAULT_LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : SWITCH_FAULT_3V3_Pin SWITCH_FAULT_5V_Pin */
   GPIO_InitStruct.Pin = SWITCH_FAULT_3V3_Pin|SWITCH_FAULT_5V_Pin;
@@ -583,28 +583,34 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : AUX1_T_Pin GSENSE_LED_Pin */
-  GPIO_InitStruct.Pin = AUX1_T_Pin|GSENSE_LED_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : DOWNSHIFT_SOL_Pin CLUTCH_SOL_Pin SLOW_CLUTCH_SOL_Pin UPSHIFT_SOL_Pin
-                           SPK_CUT_Pin AUX1_C_Pin HBEAT_Pin */
-  GPIO_InitStruct.Pin = DOWNSHIFT_SOL_Pin|CLUTCH_SOL_Pin|SLOW_CLUTCH_SOL_Pin|UPSHIFT_SOL_Pin
-                          |SPK_CUT_Pin|AUX1_C_Pin|HBEAT_Pin;
+  /*Configure GPIO pins : UPSHIFT_OUT_Pin DOWNSHIFT_OUT_Pin FAST_CLUTCH_OUT_Pin SLOW_CLUTCH_OUT_Pin
+                           DRS_OUT_Pin EXTRA_OUT_Pin */
+  GPIO_InitStruct.Pin = UPSHIFT_OUT_Pin|DOWNSHIFT_OUT_Pin|FAST_CLUTCH_OUT_Pin|SLOW_CLUTCH_OUT_Pin
+                          |DRS_OUT_Pin|EXTRA_OUT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : AUX2_C_Pin FAULT_LED_Pin */
-  GPIO_InitStruct.Pin = AUX2_C_Pin|FAULT_LED_Pin;
+  /*Configure GPIO pin : GSENSE_LED_Pin */
+  GPIO_InitStruct.Pin = GSENSE_LED_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GSENSE_LED_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : AUX2_C_PASS_Pin SPK_CUT_OUT_Pin FAULT_LED_Pin */
+  GPIO_InitStruct.Pin = AUX2_C_PASS_Pin|SPK_CUT_OUT_Pin|FAULT_LED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : AUX1_C_IN_Pin */
+  GPIO_InitStruct.Pin = AUX1_C_IN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(AUX1_C_IN_GPIO_Port, &GPIO_InitStruct);
 
 }
 
