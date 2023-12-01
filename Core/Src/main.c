@@ -301,7 +301,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 3;
+  hadc1.Init.NbrOfConversion = 5;
   hadc1.Init.DMAContinuousRequests = ENABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
@@ -311,7 +311,7 @@ static void MX_ADC1_Init(void)
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
-  sConfig.Channel = ADC_CHANNEL_10;
+  sConfig.Channel = ADC_CHANNEL_1;
   sConfig.Rank = 1;
   sConfig.SamplingTime = ADC_SAMPLETIME_480CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
@@ -321,7 +321,7 @@ static void MX_ADC1_Init(void)
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
-  sConfig.Channel = ADC_CHANNEL_11;
+  sConfig.Channel = ADC_CHANNEL_10;
   sConfig.Rank = 2;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
@@ -330,8 +330,26 @@ static void MX_ADC1_Init(void)
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
-  sConfig.Channel = ADC_CHANNEL_12;
+  sConfig.Channel = ADC_CHANNEL_11;
   sConfig.Rank = 3;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_12;
+  sConfig.Rank = 4;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_13;
+  sConfig.Rank = 5;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -569,13 +587,10 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, UPSHIFT_OUT_Pin|DOWNSHIFT_OUT_Pin|FAST_CLUTCH_OUT_Pin|SLOW_CLUTCH_OUT_Pin
-                          |DRS_OUT_Pin|EXTRA_OUT_Pin, GPIO_PIN_RESET);
+                          |DRS_OUT_Pin|EXTRA_OUT_Pin|GSENSE_LED_Pin|HBEAT_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GSENSE_LED_GPIO_Port, GSENSE_LED_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, AUX2_C_PASS_Pin|SPK_CUT_OUT_Pin|FAULT_LED_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, AUX2_C_PASS_Pin|AUX1_C_OUT_Pin|SPK_CUT_OUT_Pin|FAULT_LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : SWITCH_FAULT_3V3_Pin SWITCH_FAULT_5V_Pin */
   GPIO_InitStruct.Pin = SWITCH_FAULT_3V3_Pin|SWITCH_FAULT_5V_Pin;
@@ -584,33 +599,20 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : UPSHIFT_OUT_Pin DOWNSHIFT_OUT_Pin FAST_CLUTCH_OUT_Pin SLOW_CLUTCH_OUT_Pin
-                           DRS_OUT_Pin EXTRA_OUT_Pin */
+                           DRS_OUT_Pin EXTRA_OUT_Pin GSENSE_LED_Pin HBEAT_Pin */
   GPIO_InitStruct.Pin = UPSHIFT_OUT_Pin|DOWNSHIFT_OUT_Pin|FAST_CLUTCH_OUT_Pin|SLOW_CLUTCH_OUT_Pin
-                          |DRS_OUT_Pin|EXTRA_OUT_Pin;
+                          |DRS_OUT_Pin|EXTRA_OUT_Pin|GSENSE_LED_Pin|HBEAT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : GSENSE_LED_Pin */
-  GPIO_InitStruct.Pin = GSENSE_LED_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GSENSE_LED_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : AUX2_C_PASS_Pin SPK_CUT_OUT_Pin FAULT_LED_Pin */
-  GPIO_InitStruct.Pin = AUX2_C_PASS_Pin|SPK_CUT_OUT_Pin|FAULT_LED_Pin;
+  /*Configure GPIO pins : AUX2_C_PASS_Pin AUX1_C_OUT_Pin SPK_CUT_OUT_Pin FAULT_LED_Pin */
+  GPIO_InitStruct.Pin = AUX2_C_PASS_Pin|AUX1_C_OUT_Pin|SPK_CUT_OUT_Pin|FAULT_LED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : AUX1_C_IN_Pin */
-  GPIO_InitStruct.Pin = AUX1_C_IN_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(AUX1_C_IN_GPIO_Port, &GPIO_InitStruct);
 
 }
 

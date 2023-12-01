@@ -4,6 +4,10 @@ buckets:
     high_frequency_tcm:
         frequency_hz: 1000
         parameters:
+            auxilliary_NA:
+                ADC: ADC1_IN1
+                sensor: linear_pos_sensor_5
+                samples_buffered: 1
             gearPosition_mm:
                 ADC: ADC1_IN10
                 sensor: linear_pos_sensor_5
@@ -15,6 +19,10 @@ buckets:
             clutchPosition_mm:
                 ADC: ADC1_IN12
                 sensor: linear_pos_sensor_50
+                samples_buffered: 1
+            loadcellForceApplied_lbs:
+                ADC: ADC1_IN13
+                sensor: tcm_shift_loadcell
                 samples_buffered: 1
             counterShaftSpeed_rpm:
                 ADC: NON_ADC
