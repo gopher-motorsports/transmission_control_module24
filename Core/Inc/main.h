@@ -85,14 +85,16 @@ void Error_Handler(void);
 #define DRS_OUT_GPIO_Port GPIOA
 #define EXTRA_OUT_Pin GPIO_PIN_7
 #define EXTRA_OUT_GPIO_Port GPIOA
-#define GSENSE_LED_Pin GPIO_PIN_4
-#define GSENSE_LED_GPIO_Port GPIOC
 #define AUX2_C_PASS_Pin GPIO_PIN_12
 #define AUX2_C_PASS_GPIO_Port GPIOB
-#define AUX1_C_IN_Pin GPIO_PIN_13
-#define AUX1_C_IN_GPIO_Port GPIOB
+#define AUX1_C_OUT_Pin GPIO_PIN_13
+#define AUX1_C_OUT_GPIO_Port GPIOB
 #define SPK_CUT_OUT_Pin GPIO_PIN_14
 #define SPK_CUT_OUT_GPIO_Port GPIOB
+#define GSENSE_LED_Pin GPIO_PIN_9
+#define GSENSE_LED_GPIO_Port GPIOA
+#define HBEAT_Pin GPIO_PIN_10
+#define HBEAT_GPIO_Port GPIOA
 #define FAULT_LED_Pin GPIO_PIN_9
 #define FAULT_LED_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */

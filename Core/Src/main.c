@@ -27,7 +27,7 @@
 #include "utils.h"
 #include <stdbool.h>
 #include "pulse_sensor.h"
-
+#include "test_software_rev0.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -67,8 +67,7 @@ DMA_HandleTypeDef hdma_tim2_ch1;
 
 UART_HandleTypeDef huart1;
 
-osThreadId main_taskHandle;
-osThreadId buffer_handlingHandle;
+osThreadId test_all_loopHandle;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -83,8 +82,7 @@ static void MX_TIM10_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM11_Init(void);
-void task_MainTask(void const * argument);
-void task_BufferHandling(void const * argument);
+void task_test_all_loop(void const * argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -170,7 +168,7 @@ int main(void)
    );
 
   // Set initial output states to low because of strange behavior when this doesn't happen and pins go through the 3V3 to 5V converter.
-  HAL_GPIO_WritePin(SPK_CUT_GPIO_Port, SPK_CUT_Pin, 1);
+ /* HAL_GPIO_WritePin(SPK_CUT_GPIO_Port, SPK_CUT_Pin, 1);
   HAL_GPIO_WritePin(CLUTCH_SOL_GPIO_Port, CLUTCH_SOL_Pin, 0);
   HAL_GPIO_WritePin(SLOW_CLUTCH_SOL_GPIO_Port, SLOW_CLUTCH_SOL_Pin, 0);
   HAL_GPIO_WritePin(DOWNSHIFT_SOL_GPIO_Port, DOWNSHIFT_SOL_Pin, 0);
@@ -178,7 +176,7 @@ int main(void)
   HAL_GPIO_WritePin(FAULT_LED_GPIO_Port, FAULT_LED_Pin, 0);
   HAL_GPIO_WritePin(AUX1_C_GPIO_Port, AUX1_C_Pin, 0);
   HAL_GPIO_WritePin(AUX2_C_GPIO_Port, AUX2_C_Pin, 0);
-  HAL_GPIO_WritePin(AUX1_T_GPIO_Port, AUX1_T_Pin, 0);
+  HAL_GPIO_WritePin(AUX1_T_GPIO_Port, AUX1_T_Pin, 0);*/
 
   /* USER CODE END 2 */
 
@@ -199,13 +197,9 @@ int main(void)
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* definition and creation of main_task */
-  osThreadDef(main_task, task_MainTask, osPriorityNormal, 0, 1024);
-  main_taskHandle = osThreadCreate(osThread(main_task), NULL);
-
-  /* definition and creation of buffer_handling */
-  osThreadDef(buffer_handling, task_BufferHandling, osPriorityAboveNormal, 0, 1024);
-  buffer_handlingHandle = osThreadCreate(osThread(buffer_handling), NULL);
+  /* definition and creation of test_all_loop */
+  osThreadDef(test_all_loop, task_test_all_loop, osPriorityNormal, 0, 1024);
+  test_all_loopHandle = osThreadCreate(osThread(test_all_loop), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -301,7 +295,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 3;
+  hadc1.Init.NbrOfConversion = 5;
   hadc1.Init.DMAContinuousRequests = ENABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
@@ -311,7 +305,7 @@ static void MX_ADC1_Init(void)
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
-  sConfig.Channel = ADC_CHANNEL_10;
+  sConfig.Channel = ADC_CHANNEL_1;
   sConfig.Rank = 1;
   sConfig.SamplingTime = ADC_SAMPLETIME_480CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
@@ -321,7 +315,7 @@ static void MX_ADC1_Init(void)
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
-  sConfig.Channel = ADC_CHANNEL_11;
+  sConfig.Channel = ADC_CHANNEL_10;
   sConfig.Rank = 2;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
@@ -330,8 +324,26 @@ static void MX_ADC1_Init(void)
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
-  sConfig.Channel = ADC_CHANNEL_12;
+  sConfig.Channel = ADC_CHANNEL_11;
   sConfig.Rank = 3;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_12;
+  sConfig.Rank = 4;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_13;
+  sConfig.Rank = 5;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -569,13 +581,10 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, UPSHIFT_OUT_Pin|DOWNSHIFT_OUT_Pin|FAST_CLUTCH_OUT_Pin|SLOW_CLUTCH_OUT_Pin
-                          |DRS_OUT_Pin|EXTRA_OUT_Pin, GPIO_PIN_RESET);
+                          |DRS_OUT_Pin|EXTRA_OUT_Pin|GSENSE_LED_Pin|HBEAT_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GSENSE_LED_GPIO_Port, GSENSE_LED_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, AUX2_C_PASS_Pin|SPK_CUT_OUT_Pin|FAULT_LED_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, AUX2_C_PASS_Pin|AUX1_C_OUT_Pin|SPK_CUT_OUT_Pin|FAULT_LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : SWITCH_FAULT_3V3_Pin SWITCH_FAULT_5V_Pin */
   GPIO_InitStruct.Pin = SWITCH_FAULT_3V3_Pin|SWITCH_FAULT_5V_Pin;
@@ -584,33 +593,20 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : UPSHIFT_OUT_Pin DOWNSHIFT_OUT_Pin FAST_CLUTCH_OUT_Pin SLOW_CLUTCH_OUT_Pin
-                           DRS_OUT_Pin EXTRA_OUT_Pin */
+                           DRS_OUT_Pin EXTRA_OUT_Pin GSENSE_LED_Pin HBEAT_Pin */
   GPIO_InitStruct.Pin = UPSHIFT_OUT_Pin|DOWNSHIFT_OUT_Pin|FAST_CLUTCH_OUT_Pin|SLOW_CLUTCH_OUT_Pin
-                          |DRS_OUT_Pin|EXTRA_OUT_Pin;
+                          |DRS_OUT_Pin|EXTRA_OUT_Pin|GSENSE_LED_Pin|HBEAT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : GSENSE_LED_Pin */
-  GPIO_InitStruct.Pin = GSENSE_LED_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GSENSE_LED_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : AUX2_C_PASS_Pin SPK_CUT_OUT_Pin FAULT_LED_Pin */
-  GPIO_InitStruct.Pin = AUX2_C_PASS_Pin|SPK_CUT_OUT_Pin|FAULT_LED_Pin;
+  /*Configure GPIO pins : AUX2_C_PASS_Pin AUX1_C_OUT_Pin SPK_CUT_OUT_Pin FAULT_LED_Pin */
+  GPIO_InitStruct.Pin = AUX2_C_PASS_Pin|AUX1_C_OUT_Pin|SPK_CUT_OUT_Pin|FAULT_LED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : AUX1_C_IN_Pin */
-  GPIO_InitStruct.Pin = AUX1_C_IN_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(AUX1_C_IN_GPIO_Port, &GPIO_InitStruct);
 
 }
 
@@ -618,42 +614,23 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE END 4 */
 
-/* USER CODE BEGIN Header_task_MainTask */
+/* USER CODE BEGIN Header_task_test_all_loop */
 /**
-  * @brief  Function implementing the main_task thread.
+  * @brief  Function implementing the test_all_loop thread.
   * @param  argument: Not used
   * @retval None
   */
-/* USER CODE END Header_task_MainTask */
-void task_MainTask(void const * argument)
+/* USER CODE END Header_task_test_all_loop */
+void task_test_all_loop(void const * argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
   for(;;)
   {
-	  main_loop();
+	test_all_loop();
     osDelay(1);
   }
   /* USER CODE END 5 */
-}
-
-/* USER CODE BEGIN Header_task_BufferHandling */
-/**
-* @brief Function implementing the buffer_handling thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_task_BufferHandling */
-void task_BufferHandling(void const * argument)
-{
-  /* USER CODE BEGIN task_BufferHandling */
-  /* Infinite loop */
-  for(;;)
-  {
-	  can_buffer_handling_loop();
-    osDelay(1);
-  }
-  /* USER CODE END task_BufferHandling */
 }
 
 /**

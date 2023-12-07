@@ -140,7 +140,7 @@ void main_loop()
 	if (HAL_GetTick() - lastHeartbeat > HEARTBEAT_MS_BETWEEN)
 	{
 		lastHeartbeat = HAL_GetTick();
-		HAL_GPIO_TogglePin(HBEAT_GPIO_Port, HBEAT_Pin);
+		//HAL_GPIO_TogglePin(HBEAT_GPIO_Port, HBEAT_Pin);
 	}
 
 #ifdef NO_GEAR_POT
