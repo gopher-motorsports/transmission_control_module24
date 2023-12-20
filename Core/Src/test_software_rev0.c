@@ -36,10 +36,14 @@ uint8_t slow_clutch_state = 0;
 uint8_t drs_state = 0;
 uint8_t extra_state = 0;
 
+//pulse sensor data
+float easy_access_trans_speed;
+
 //car side output
 uint8_t spk_out_state = 0;
 uint8_t aux1_c_state = 0;
 uint8_t aux2_c_pass_state = 0;
+
 
 
 void test_all_loop(void){
@@ -53,11 +57,11 @@ void test_all_loop(void){
 		}
 
 	//MCU specific outputs
-		HAL_GPIO_WritePin(FAULT_LED_GPIO_Port, FAULT_LED_Pin, fault_led_state);
+	HAL_GPIO_WritePin(FAULT_LED_GPIO_Port, FAULT_LED_Pin, fault_led_state);
 
 	//inputs
 	power_3v3_fault_state = HAL_GPIO_ReadPin(SWITCH_FAULT_3V3_GPIO_Port, SWITCH_FAULT_3V3_Pin);
-	power_5V_fault_state = HAL_GPIO_ReadPin(SWITCH_FAULT_5V_GPIO_Port, SWITCH_FAULT_5V_Pin);
+	power_5V_fault_state = HAL_GPIO_ReadPin(SWITCH_FAULT_5V0_GPIO_Port, SWITCH_FAULT_5V_Pin);
 
 	//outputs transmisison side
 	HAL_GPIO_WritePin(UPSHIFT_OUT_GPIO_Port, UPSHIFT_OUT_Pin, upshift_state);
@@ -72,5 +76,9 @@ void test_all_loop(void){
 	HAL_GPIO_WritePin(SPK_CUT_OUT_GPIO_Port, SPK_CUT_OUT_Pin, spk_out_state);
 	HAL_GPIO_WritePin(AUX1_C_OUT_GPIO_Port, AUX1_C_OUT_Pin, aux1_c_state);
 	HAL_GPIO_WritePin(AUX2_C_PASS_GPIO_Port, AUX2_C_PASS_Pin, aux2_c_pass_state);
+
+	//pulse sensor
+	check_pulse_sensors();
+	easy_access_trans_speed = tcm_data.trans_speed;
 
 }
