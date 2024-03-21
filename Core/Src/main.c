@@ -58,7 +58,7 @@
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
 
-CAN_HandleTypeDef hcan1;
+CAN_HandleTypeDef hcan2;
 
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim10;
@@ -77,12 +77,12 @@ osThreadId buffer_handlingHandle;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
-static void MX_CAN1_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_TIM10_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM11_Init(void);
+static void MX_CAN2_Init(void);
 void task_MainTask(void const * argument);
 void task_BufferHandling(void const * argument);
 
@@ -145,16 +145,16 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_CAN1_Init();
   MX_ADC1_Init();
   MX_TIM10_Init();
   MX_USART1_UART_Init();
   MX_TIM2_Init();
   MX_TIM11_Init();
+  MX_CAN2_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start(&htim11);
-  init(&hcan1);
-  gsense_init(&hcan1, &hadc1, NULL/*&hadc2*/, NULL, &htim10, GSENSE_LED_GPIO_Port, GSENSE_LED_Pin);
+  init(&hcan2);
+  gsense_init(&hcan2, &hadc1, NULL/*&hadc2*/, NULL, &htim10, GSENSE_LED_GPIO_Port, GSENSE_LED_Pin);
 
   setup_pulse_sensor_vss(
 		  IC_TIMER,
@@ -343,39 +343,39 @@ static void MX_ADC1_Init(void)
 }
 
 /**
-  * @brief CAN1 Initialization Function
+  * @brief CAN2 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_CAN1_Init(void)
+static void MX_CAN2_Init(void)
 {
 
-  /* USER CODE BEGIN CAN1_Init 0 */
+  /* USER CODE BEGIN CAN2_Init 0 */
 
-  /* USER CODE END CAN1_Init 0 */
+  /* USER CODE END CAN2_Init 0 */
 
-  /* USER CODE BEGIN CAN1_Init 1 */
+  /* USER CODE BEGIN CAN2_Init 1 */
 
-  /* USER CODE END CAN1_Init 1 */
-  hcan1.Instance = CAN1;
-  hcan1.Init.Prescaler = 5;
-  hcan1.Init.Mode = CAN_MODE_NORMAL;
-  hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
-  hcan1.Init.TimeSeg1 = CAN_BS1_6TQ;
-  hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
-  hcan1.Init.TimeTriggeredMode = DISABLE;
-  hcan1.Init.AutoBusOff = ENABLE;
-  hcan1.Init.AutoWakeUp = ENABLE;
-  hcan1.Init.AutoRetransmission = DISABLE;
-  hcan1.Init.ReceiveFifoLocked = DISABLE;
-  hcan1.Init.TransmitFifoPriority = DISABLE;
-  if (HAL_CAN_Init(&hcan1) != HAL_OK)
+  /* USER CODE END CAN2_Init 1 */
+  hcan2.Instance = CAN2;
+  hcan2.Init.Prescaler = 16;
+  hcan2.Init.Mode = CAN_MODE_NORMAL;
+  hcan2.Init.SyncJumpWidth = CAN_SJW_1TQ;
+  hcan2.Init.TimeSeg1 = CAN_BS1_1TQ;
+  hcan2.Init.TimeSeg2 = CAN_BS2_1TQ;
+  hcan2.Init.TimeTriggeredMode = DISABLE;
+  hcan2.Init.AutoBusOff = DISABLE;
+  hcan2.Init.AutoWakeUp = DISABLE;
+  hcan2.Init.AutoRetransmission = DISABLE;
+  hcan2.Init.ReceiveFifoLocked = DISABLE;
+  hcan2.Init.TransmitFifoPriority = DISABLE;
+  if (HAL_CAN_Init(&hcan2) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN CAN1_Init 2 */
+  /* USER CODE BEGIN CAN2_Init 2 */
 
-  /* USER CODE END CAN1_Init 2 */
+  /* USER CODE END CAN2_Init 2 */
 
 }
 
@@ -569,38 +569,51 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, UPSHIFT_SOL_Pin|DOWNSHIFT_SOL_Pin|CLUTCH_SOL_Pin|SLOW_CLUTCH_SOL_Pin
-                          |DRS_OUT_Pin|EXTRA_OUT_Pin|GSENSE_LED_Pin|HBEAT_Pin, GPIO_PIN_RESET);
+                          |GSENSE_LED_Pin|HBEAT_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, AUX2_C_Pin|SPK_CUT_Pin|FAULT_LED_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, DRS_POWER_EN_Pin|DRS_PWM_Pin|AUX2_C_Pin|AUX1_C_Pin
+                          |FAULT_LED_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : SWITCH_FAULT_3V3_Pin SWITCH_FAULT_5V_Pin */
-  GPIO_InitStruct.Pin = SWITCH_FAULT_3V3_Pin|SWITCH_FAULT_5V_Pin;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(SPK_CUT_GPIO_Port, SPK_CUT_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : SWITCH_FAULT_5V_Pin SWITCH_FAULT_3V3_Pin */
+  GPIO_InitStruct.Pin = SWITCH_FAULT_5V_Pin|SWITCH_FAULT_3V3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : UPSHIFT_SOL_Pin DOWNSHIFT_SOL_Pin CLUTCH_SOL_Pin SLOW_CLUTCH_SOL_Pin
-                           DRS_OUT_Pin EXTRA_OUT_Pin GSENSE_LED_Pin HBEAT_Pin */
+                           GSENSE_LED_Pin HBEAT_Pin */
   GPIO_InitStruct.Pin = UPSHIFT_SOL_Pin|DOWNSHIFT_SOL_Pin|CLUTCH_SOL_Pin|SLOW_CLUTCH_SOL_Pin
-                          |DRS_OUT_Pin|EXTRA_OUT_Pin|GSENSE_LED_Pin|HBEAT_Pin;
+                          |GSENSE_LED_Pin|HBEAT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : AUX2_C_Pin SPK_CUT_Pin FAULT_LED_Pin */
-  GPIO_InitStruct.Pin = AUX2_C_Pin|SPK_CUT_Pin|FAULT_LED_Pin;
+  /*Configure GPIO pins : DRS_POWER_EN_Pin DRS_PWM_Pin AUX2_C_Pin AUX1_C_Pin
+                           FAULT_LED_Pin */
+  GPIO_InitStruct.Pin = DRS_POWER_EN_Pin|DRS_PWM_Pin|AUX2_C_Pin|AUX1_C_Pin
+                          |FAULT_LED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : AUX1_C_Pin */
-  GPIO_InitStruct.Pin = AUX1_C_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  /*Configure GPIO pin : SPK_CUT_Pin */
+  GPIO_InitStruct.Pin = SPK_CUT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(AUX1_C_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(SPK_CUT_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PC9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_9;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
 }
 
