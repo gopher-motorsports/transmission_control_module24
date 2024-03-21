@@ -32,6 +32,7 @@
 //#define RUN_TIME_STATS
 //#define SMART_SLOW_CLUTCH
 
+
 typedef enum
 {
 	ST_IDLE = 0,
@@ -70,10 +71,15 @@ typedef enum
 	ST_D_FINISH_SHIFT
 } Downshift_States_t;
 
+//shared variables between files
+extern float shift_mode_2;
+extern Upshift_States_t upshift_state, next_upshift_state;
+extern Downshift_States_t downshift_state, next_downshift_state;
+extern U8 error_byte;
+
 void init(CAN_HandleTypeDef* hcan_ptr);
 void can_buffer_handling_loop();
 void main_loop();
 
 #define GEAR_UPDATE_TIME_MS 25
-
 #endif
