@@ -57,6 +57,7 @@
 /* External variables --------------------------------------------------------*/
 extern DMA_HandleTypeDef hdma_adc1;
 extern DMA_HandleTypeDef hdma_tim2_ch1;
+extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim10;
 extern TIM_HandleTypeDef htim6;
 
@@ -188,6 +189,33 @@ void TIM1_UP_TIM10_IRQHandler(void)
   /* USER CODE BEGIN TIM1_UP_TIM10_IRQn 1 */
 
   /* USER CODE END TIM1_UP_TIM10_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM3 global interrupt.
+  */
+void TIM3_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM3_IRQn 0 */
+	if (__HAL_TIM_GET_FLAG(&htim3, TIM_FLAG_CC1) == 1) { //output compare flag
+		if (__HAL_TIM_GET_IT_SOURCE(&htim3, TIM_IT_CC1) == 1) { //check if output compare interrupt is enabled
+			__HAL_TIM_CLEAR_FLAG(&htim3, TIM_FLAG_CC1); // Clear the flag
+			HAL_GPIO_WritePin(DRS_PWM_GPIO_Port, DRS_PWM_Pin, 0); //pull low at compare match event
+		}
+	}
+
+	if (__HAL_TIM_GET_FLAG(&htim3, TIM_FLAG_UPDATE) != RESET) { //timer overflow flag
+		if (__HAL_TIM_GET_IT_SOURCE(&htim3, TIM_IT_UPDATE) != RESET) {
+			// Timer overflow event occurred
+			__HAL_TIM_CLEAR_FLAG(&htim3, TIM_FLAG_UPDATE); // Clear the flag
+			HAL_GPIO_WritePin(DRS_PWM_GPIO_Port, DRS_PWM_Pin, 1); //pull high at timer overflow
+		}
+	}
+  /* USER CODE END TIM3_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim3);
+  /* USER CODE BEGIN TIM3_IRQn 1 */
+
+  /* USER CODE END TIM3_IRQn 1 */
 }
 
 /**
