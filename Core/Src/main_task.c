@@ -14,6 +14,7 @@
 #include "upshift_sm.h"
 #include "downshift_sm.h"
 #include "shift_parameters.h"
+#include "drs.h"
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -127,7 +128,8 @@ void main_loop()
 		send_uart_tick(); // send the current tick over UART every second
 		toggle_heart_beat();
 		checkForErrors();
-
+		set_DRS_Servo_Position();
+		//set_DRS_Servo_Position();
 		//send CAN params
 		updateAndQueueParams();
 

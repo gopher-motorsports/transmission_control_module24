@@ -158,7 +158,6 @@ int main(void)
   HAL_TIM_Base_Start(&htim11);
   init(&hcan2);
   gsense_init(&hcan2, &hadc1, NULL/*&hadc2*/, NULL, &htim10, GSENSE_LED_GPIO_Port, GSENSE_LED_Pin);
-  pass_on_timer_info(&htim3, TIM_CHANNEL_1);
   setup_pulse_sensor_vss(
 		  IC_TIMER,
  		  TIM_CHANNEL_1,
@@ -171,6 +170,9 @@ int main(void)
 		  MIN_SAMPLES,
 		  64
    );
+
+  //DRS Setup:
+  pass_on_timer_info(&htim3, TIM_CHANNEL_3);
 
   // Set initial output states to low because of strange behavior when this doesn't happen and pins go through the 3V3 to 5V converter.
   HAL_GPIO_WritePin(SPK_CUT_GPIO_Port, SPK_CUT_Pin, 1);
@@ -462,7 +464,7 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 8-1;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 59999;
+  htim3.Init.Period = 29999;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
@@ -488,11 +490,10 @@ static void MX_TIM3_Init(void)
   sConfigOC.Pulse = 10000;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_OC_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  if (HAL_TIM_OC_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
   {
     Error_Handler();
   }
-  __HAL_TIM_ENABLE_OCxPRELOAD(&htim3, TIM_CHANNEL_1);
   /* USER CODE BEGIN TIM3_Init 2 */
 
   /* USER CODE END TIM3_Init 2 */
