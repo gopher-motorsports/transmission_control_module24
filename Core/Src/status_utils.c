@@ -96,19 +96,6 @@ void checkForErrors(void) {
 }
 
 
-// can_callback_function example
-
-// change_led_state
-//  a custom function that will change the state of the LED specified
-//  by parameter to remote_param. In this case parameter is a U16*, but
-//  any data type can be pointed to, as long as it is configured and casted
-//  correctly
-void change_led_state(U8 sender, void* parameter, U8 remote_param, U8 UNUSED1, U8 UNUSED2, U8 UNUSED3)
-{
-	//HAL_GPIO_WritePin(FAULT_LED_GPIO_Port, FAULT_LED_Pin, !!remote_param);
-	return;
-}
-
 
 // init_error
 //  This function will stay in an infinite loop, blinking the LED in a 0.5sec period. Should only

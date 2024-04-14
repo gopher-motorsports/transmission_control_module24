@@ -15,7 +15,6 @@
 #define DOWNSHIFT_BUTTON (swDownshift_state.data)
 
 // Use this to define what module this board will be
-#define THIS_MODULE_ID TCM_ID
 #define PRINTF_HB_MS_BETWEEN 1000
 #define HEARTBEAT_MS_BETWEEN 500
 #define TCM_DATA_UPDATE_MS_BETWEEN 10

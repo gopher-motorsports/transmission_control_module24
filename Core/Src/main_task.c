@@ -46,7 +46,7 @@ static void updateAndQueueParams(void);
 static void check_driver_inputs(void);
 static void clutch_task();
 static void shifting_task();
-
+static void change_led_state(MODULE_ID sender, U8 remote_param, U8 UNUSED1, U8 UNUSED2, U8 UNUSED3);
 
 // init
 //  What needs to happen on startup in order to run GopherCAN
@@ -57,18 +57,15 @@ void init(CAN_HandleTypeDef* hcan_ptr)
 	// initialize CAN
 	// NOTE: CAN will also need to be added in CubeMX and code must be generated
 	// Check the STM_CAN repo for the file "F0xx CAN Config Settings.pptx" for the correct settings
-	if (init_can(GCAN0, example_hcan, THIS_MODULE_ID, BXTYPE_MASTER))
+	if (init_can(example_hcan, GCAN0))
 	{
 		init_error();
 	}
 
 	// Set the function pointer of SET_LED_STATE. This means the function change_led_state()
 	// will be run whenever this can command is sent to the module
-	if (add_custom_can_func(SET_LED_STATE, &change_led_state, TRUE, NULL))
-	{
-		init_error();
-	}
 
+	attach_callback_cmd(SET_LED_STATE, &change_led_state);
 	initialization_start_time_ms = HAL_GetTick();
 
 	// Lock param sending for everything - uncomment for stress testing CAN
@@ -376,4 +373,18 @@ static void clutch_task() {
 		}
 #endif
 	}
+}
+
+
+// can_callback_function example
+
+// change_led_state
+//  a custom function that will change the state of the LED specified
+//  by parameter to remote_param. In this case parameter is a U16*, but
+//  any data type can be pointed to, as long as it is configured and casted
+//  correctly
+static void change_led_state(MODULE_ID sender, U8 remote_param, U8 UNUSED1, U8 UNUSED2, U8 UNUSED3)
+{
+	HAL_GPIO_WritePin(GSENSE_LED_GPIO_Port, GSENSE_LED_Pin, !!remote_param);
+	return;
 }
