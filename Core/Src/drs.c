@@ -21,53 +21,32 @@
 
 TIM_HandleTypeDef* DRS_Timer;
 U32 DRS_Channel;
+int rot_dial_timer_val = 0; //keeping this in here if we want to use rotary dial
+U8 drs_button_state;
 
-TIM_OC_InitTypeDef sConfigOC = {0};
-
-void init_timer3();
-
-void pass_on_timer_info(TIM_HandleTypeDef* timer_address, U32 channel1){
+void init_DRS_servo(TIM_HandleTypeDef* timer_address, U32 channel){
 	DRS_Timer = timer_address;
-	DRS_Channel = channel1;
-	init_timer3();
-
+	DRS_Channel = channel;
+	HAL_TIM_PWM_Start(DRS_Timer, DRS_Channel); //turn on PWM generation
+	HAL_GPIO_WritePin(DRS_POWER_EN_GPIO_Port, DRS_POWER_EN_Pin, 1); //turn DRS servo on
 }
 
-void init_timer3(){
-	HAL_NVIC_EnableIRQ(TIM3_IRQn);
-	HAL_TIM_Base_Start_IT(DRS_Timer);
-	HAL_TIM_OC_Start_IT(DRS_Timer, TIM_CHANNEL_3);
-
-	sConfigOC.OCMode = TIM_OCMODE_TIMING;
-	sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-	sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-}
-U8 drs_button_state = 0;
-U8 rot_dial = 3;
-
-uint16_t openn = 25919;
-uint16_t closed = 18959;
 void set_DRS_Servo_Position(){
-	//duty cycle lookup table for each DRS position
-	//static U8 rot_dial = 3;//change macro to actual g-can variable
-	static U16 rot_dial_timer_val = 0;
+	//duty cycle lookup table for each DRS position, optional if we are using the rotary dial
 	static int DRS_POS_LUT[] = {DRS_POS_0, DRS_POS_1, DRS_POS_2, DRS_POS_3, DRS_POS_4,
 	                            DRS_POS_5, DRS_POS_6, DRS_POS_7, DRS_POS_8, DRS_POS_9,
 	                            DRS_POS_10, DRS_POS_11, DRS_POS_12, DRS_POS_13,
 	                            DRS_POS_14, DRS_POS_15};
-	//add rot_dial = gopher can variable
-	rot_dial_timer_val = DRS_POS_LUT[rot_dial];
-    if (drs_button_state == 1){
-    	sConfigOC.Pulse = rot_dial_timer_val;
-    	HAL_TIM_PWM_ConfigChannel(DRS_Timer, &sConfigOC, DRS_Channel);
-    	HAL_TIM_OC_Start(DRS_Timer, DRS_Channel);
-    }
-    else{
-    	//sConfigOC.Pulse = 1;
-    	//HAL_TIM_PWM_ConfigChannel(DRS_Timer, &sConfigOC, DRS_Channel);
-    	HAL_TIM_PWM_ConfigChannel(DRS_Timer, &sConfigOC, DRS_Channel);
-    	HAL_TIM_OC_Stop(DRS_Timer,DRS_Channel); //is it better to just leave it on with duty 0?
-    	HAL_GPIO_WritePin(DRS_PWM_GPIO_Port, DRS_PWM_Pin, 0);
+	rot_dial_timer_val = DRS_POS_LUT[swDial_ul.data]; //instead of setting open or closed we could set to a specific location
 
-    }
+
+	drs_button_state = swButon3_state.data;; //place holder button
+
+	if(drs_button_state == 1){
+		__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, OPEN_POS);
+	}
+	else{
+		__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, CLOSED_POS);
+	}
 }
+

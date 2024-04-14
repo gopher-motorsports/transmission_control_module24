@@ -129,7 +129,6 @@ void main_loop()
 		toggle_heart_beat();
 		checkForErrors();
 		set_DRS_Servo_Position();
-		//set_DRS_Servo_Position();
 		//send CAN params
 		updateAndQueueParams();
 

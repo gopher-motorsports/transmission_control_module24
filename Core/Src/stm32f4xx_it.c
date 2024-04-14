@@ -197,57 +197,6 @@ void TIM1_UP_TIM10_IRQHandler(void)
 void TIM3_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM3_IRQn 0 */
-
-	if (__HAL_TIM_GET_FLAG(&htim3, TIM_FLAG_CC3) == 1) { //output compare flag
-		if (__HAL_TIM_GET_IT_SOURCE(&htim3, TIM_IT_CC3) == 1) { //check if output compare interrupt is enabled
-			__HAL_TIM_CLEAR_FLAG(&htim3, TIM_FLAG_CC3); // Clear the flag
-			HAL_GPIO_WritePin(DRS_PWM_GPIO_Port, DRS_PWM_Pin, 0); //pull low at compare match event
-		}
-	}
-
-	if (__HAL_TIM_GET_FLAG(&htim3, TIM_FLAG_UPDATE) != RESET) { //timer overflow flag
-		if (__HAL_TIM_GET_IT_SOURCE(&htim3, TIM_IT_UPDATE) != RESET) {
-			// Timer overflow event occurred
-			__HAL_TIM_CLEAR_FLAG(&htim3, TIM_FLAG_UPDATE); // Clear the flag
-			HAL_GPIO_WritePin(DRS_PWM_GPIO_Port, DRS_PWM_Pin, 1); //pull high at timer overflow
-		}
-	}
-	//(1 << 3)
-	/*if ((TIM3->SR & TIM_SR_CC3IF) != 0) {
-		bit_position = 3;
-		mask = 1 << bit_position;
-		bit = (TIM3->SR & mask) >> bit_position;
-		// Output compare flag for channel 3 is set
-		// Your code here
-		TIM3->SR&= ~(TIM_SR_CC3IF); // Clear the interrupt flag
-		//output_compare_flag = TIM_SR_CC3IF;
-		//output_compare_flag = TIM3->SR & ~(TIM_SR_CC3IF);
-
-		bit_position = 3;
-		mask = 1 << bit_position;
-		bit = (TIM3->SR & mask) >> bit_position;
-		HAL_GPIO_WritePin(DRS_PWM_GPIO_Port, DRS_PWM_Pin, 1);
-	}
-
-	if(bit == 0){
-
-	}
-
-	if ((TIM3->SR & TIM_SR_UIF) != 0) {
-		// Timer overflow flag is set
-		// Your code here
-		bit_position_ov = 1;
-		mask_ov = 1 << bit_position_ov;
-		bit_ov = (TIM3->SR & mask) >> bit_position_ov;
-
-		TIM3->SR &= ~(TIM_SR_UIF); // Clear the interrupt flag
-		//overflow_flag = TIM3->SR & TIM_SR_UIF;
-
-		bit_position_ov = 1;
-		mask_ov = 1 << bit_position_ov;
-		bit_ov = (TIM3->SR & mask) >> bit_position_ov;
-	}
-	*/
   /* USER CODE END TIM3_IRQn 0 */
   HAL_TIM_IRQHandler(&htim3);
   /* USER CODE BEGIN TIM3_IRQn 1 */
