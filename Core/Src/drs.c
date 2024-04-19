@@ -37,7 +37,7 @@ void set_DRS_Servo_Position(){
 	                            DRS_POS_5, DRS_POS_6, DRS_POS_7, DRS_POS_8, DRS_POS_9,
 	                            DRS_POS_10, DRS_POS_11, DRS_POS_12, DRS_POS_13,
 	                            DRS_POS_14, DRS_POS_15};
-	rot_dial_timer_val = DRS_POS_LUT[swDial_ul.data]; //instead of setting open or closed we could set to a specific location
+	rot_dial_timer_val = DRS_POS_LUT[swDial_a_ul.data]; //instead of setting open or closed we could set to a specific location
 
 
 	drs_button_state = swButon3_state.data;; //place holder button

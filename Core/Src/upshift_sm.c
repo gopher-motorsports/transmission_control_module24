@@ -11,9 +11,9 @@
 #include "pulse_sensor.h"
 #include "utils.h"
 #include "status_utils.h"
-#include <stdio.h>
-#include <stdbool.h>
 #include "shift_parameters.h"
+#include "debug_defines.h"
+#include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
 #include <cmsis_os.h>
@@ -29,6 +29,10 @@ void run_upshift_sm(void)
 	static uint32_t begin_extra_push_tick;
 	static uint32_t begin_exit_gear_spark_return_tick;
 
+#ifdef USING_LOADCELL
+	static uint16_t loadcell_curr_max_pounds;
+	static bool loadcell_data_inaccurate;
+#endif
 	// calculate the target RPM at the start of each cycle through the loop
 	tcm_data.target_RPM = calc_target_RPM(tcm_data.target_gear);
 
@@ -63,14 +67,50 @@ void run_upshift_sm(void)
 		printf("Distance from Last Occurrence: %lu //\n", HAL_GetTick() - lastShiftingChangeTick);
 		lastShiftingChangeTick = HAL_GetTick();
 #endif
+
+//Loadcell logic
+#ifdef USING_LOADCELL
+		loadcell_data_inaccurate = false;
+#endif
 		break;
 
 	case ST_U_LOAD_SHIFT_LVR:
 		// we want to push on the solenoid, but not spark cut to preload the shift lever
 		set_upshift_solenoid(SOLENOID_ON);
 		safe_spark_cut(false);
+#ifdef USING_LOADCELL
+		if (!tcm_data.time_shift_only){
+			if(get_loadcell_weight() >  LOADCELL_PRELOAD_UPSHIFT_THRESH_V){
+				loadcell_curr_max_pounds = get_loadcell_weight();
+				begin_exit_gear_tick = HAL_GetTick();
+				safe_spark_cut(true);
+				next_upshift_state = ST_U_EXIT_GEAR;
+			}
 
-		// wait for the preload time to be over
+			else{
+				if (HAL_GetTick() - begin_shift_tick > UPSHIFT_SHIFT_LEVER_PRELOAD_TIMEOUT_MS(shift_mode_2)){
+							loadcell_data_inaccurate = true;
+							begin_exit_gear_tick = HAL_GetTick();
+							safe_spark_cut(true);
+							next_upshift_state = ST_U_EXIT_GEAR;
+				}
+			}
+		}
+
+		else{
+			// wait for the preload time to be over
+			if (HAL_GetTick() - begin_shift_tick > UPSHIFT_SHIFT_LEVER_PRELOAD_TIME_MS(shift_mode_2))
+			{
+				// preload time is over. Start spark cutting to disengage the
+				// gears and moving the RPM to match up with the next gearS
+				begin_exit_gear_tick = HAL_GetTick();
+				safe_spark_cut(true);
+
+				// move on to waiting to exit gear
+				next_upshift_state = ST_U_EXIT_GEAR;
+			}
+		}
+#else //start of non-loadcell code
 		if (HAL_GetTick() - begin_shift_tick > UPSHIFT_SHIFT_LEVER_PRELOAD_TIME_MS(shift_mode_2))
 		{
 			// preload time is over. Start spark cutting to disengage the
@@ -80,6 +120,9 @@ void run_upshift_sm(void)
 
 			// move on to waiting to exit gear
 			next_upshift_state = ST_U_EXIT_GEAR;
+		}
+
+#endif
 
 #ifdef SHIFT_DEBUG
 			// Debug
@@ -89,7 +132,6 @@ void run_upshift_sm(void)
 			printf("Distance from Last Occurrence: %lu //\n", HAL_GetTick() - lastShiftingChangeTick);
 			lastShiftingChangeTick = HAL_GetTick();
 #endif
-		}
 		break;
 
 	case ST_U_EXIT_GEAR: // **************************************************
@@ -134,7 +176,17 @@ void run_upshift_sm(void)
 #endif
 				break;
 			}
-
+#ifdef USING_LOADCELL
+			if(!loadcell_data_inaccurate){
+				if(get_loadcell_weight() > loadcell_curr_max_pounds){
+					loadcell_curr_max_pounds = get_loadcell_weight();
+				}
+				else if(loadcell_curr_max_pounds - get_loadcell_weight() > LOADCELL_FORCE_DROP_THRESH_V){
+					begin_enter_gear_tick = HAL_GetTick();
+					next_upshift_state = ST_U_ENTER_GEAR;
+				}
+			}
+#endif
 			// the shift lever has not moved far enough. Check if it has been
 			// long enough to timeout yet
 			if (HAL_GetTick() - begin_exit_gear_tick > UPSHIFT_EXIT_TIMEOUT_MS(shift_mode_2))
@@ -243,7 +295,6 @@ void run_upshift_sm(void)
 			if (tcm_data.current_gear == (initial_gear + 2))
 			{
 #endif
-
 				begin_extra_push_tick = HAL_GetTick();
 				next_upshift_state = ST_U_EXTRA_PUSH;
 				// shift position says we are done shifting
@@ -263,6 +314,18 @@ void run_upshift_sm(void)
 #endif
 				break;
 			}
+
+#ifdef USING_LOADCELL
+			if(!loadcell_data_inaccurate){
+				if(get_loadcell_weight() > loadcell_curr_max_pounds){
+					loadcell_curr_max_pounds = get_loadcell_weight();
+				}
+				else if(loadcell_curr_max_pounds - get_loadcell_weight() > LOADCELL_FORCE_DROP_THRESH_V){
+					begin_extra_push_tick = HAL_GetTick();
+					next_upshift_state = ST_U_EXTRA_PUSH;
+				}
+			}
+#endif
 
 			// check if we are out of time for this state
 			if (HAL_GetTick() - begin_enter_gear_tick > UPSHIFT_ENTER_TIMEOUT_MS(shift_mode_2))

@@ -4,6 +4,10 @@ buckets:
     high_frequency_tcm:
         frequency_hz: 1000
         parameters:
+            channelCurrentDRS_A:
+                ADC: ADC1_IN8
+                sensor: vbat_channel_current
+                samples_buffered: 1
             gearPosition_mm:
                 ADC: ADC1_IN10
                 sensor: linear_pos_sensor_5
@@ -20,7 +24,7 @@ buckets:
                 ADC: NON_ADC
                 sensor: NON_ADC
                 samples_buffered: 1
-            tcmLoadcell_N:
+            tcmLoadcell_lb:
                 ADC: ADC1_IN15
                 sensor: shifting_loadcell  
                 samples_buffered: 1

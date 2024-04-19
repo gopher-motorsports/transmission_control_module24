@@ -442,7 +442,14 @@ float get_shift_pot_pos(void)
 {
 	return shifterPosition_mm.data;
 }
-
+float get_loadcell_weight(void){
+	if(tcmLoadcell_lb.data > 220.462)
+		return 220.462;
+	else if(tcmLoadcell_lb.data < -220.462)
+		return -220.462;
+	else
+		return tcmLoadcell_lb.data;
+}
 U32 get_ECU_RPM()
 {
 	return engineRPM_rpm.data;

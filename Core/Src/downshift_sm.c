@@ -9,12 +9,12 @@
 #include "main.h"
 #include "gopher_sense.h"
 #include "pulse_sensor.h"
+#include "debug_defines.h"
+#include "shift_parameters.h"
 #include "utils.h"
 #include <stdio.h>
 #include <stdbool.h>
-#include "shift_parameters.h"
 #include <string.h>
-#include <stdbool.h>
 #include <cmsis_os.h>
 
 // run_downshift_sm
@@ -27,6 +27,11 @@ void run_downshift_sm(void)
 	static uint32_t begin_enter_gear_tick;
 	static uint32_t begin_extra_push_time_tick;
 	static uint32_t begin_hold_clutch_tick;
+
+#ifdef USING_LOADCELL
+	static uint16_t loadcell_curr_min_voltage;
+	static bool loadcell_data_inaccurate;
+#endif
 
 	// calculate the target rpm at the start of each cycle
 	tcm_data.target_RPM = calc_target_RPM(tcm_data.target_gear);
@@ -45,6 +50,7 @@ void run_downshift_sm(void)
 #endif
 		initial_gear = tcm_data.current_gear;
 		tcm_data.successful_shift = false;
+
 
 		set_downshift_solenoid(SOLENOID_ON);
 
@@ -65,6 +71,10 @@ void run_downshift_sm(void)
 		printf("Distance from Last Occurrence: %lu //\n", HAL_GetTick() - lastShiftingChangeTick);
 		lastShiftingChangeTick = HAL_GetTick();
 #endif
+
+#ifdef USING_LOADCELL
+		loadcell_data_inaccurate = false;
+#endif
 		break;
 
 	case ST_D_LOAD_SHIFT_LVR: // **********************************************
@@ -79,6 +89,37 @@ void run_downshift_sm(void)
 		// less about timing their blips perfectly because the TCM will do it
 		safe_spark_cut(true);
 
+#ifdef USING_LOADCELL
+		if (!tcm_data.time_shift_only){
+			if(get_loadcell_weight() < LOADCELL_PRELOAD_DOWNSHIFT_THRESH_V){
+				loadcell_curr_min_voltage = get_loadcell_weight();
+				begin_exit_gear_tick = HAL_GetTick();
+				safe_spark_cut(true);
+				next_upshift_state = ST_D_EXIT_GEAR;
+			}
+
+			else{
+				if (HAL_GetTick() - begin_shift_tick > UPSHIFT_SHIFT_LEVER_PRELOAD_TIMEOUT_MS(shift_mode_2)){
+							loadcell_data_inaccurate = true;
+							begin_exit_gear_tick = HAL_GetTick();
+							safe_spark_cut(true);
+							next_upshift_state = ST_D_EXIT_GEAR;
+				}
+			}
+		}
+		else{
+			//same code as pre-loadcell code
+			// wait for the preload time to be over
+			if ((HAL_GetTick() - begin_shift_tick > DOWNSHIFT_SHIFT_LEVER_PRELOAD_TIME_MS(shift_mode_2)))
+					{
+						// done with preloading. Start allowing blips and move on to trying
+						// to exit the gear
+						safe_spark_cut(false);
+						begin_exit_gear_tick = HAL_GetTick();
+						next_downshift_state = ST_D_EXIT_GEAR;
+
+		}
+#else //start of non-loadcell code
 		if ((HAL_GetTick() - begin_shift_tick > DOWNSHIFT_SHIFT_LEVER_PRELOAD_TIME_MS(shift_mode_2)))
 		{
 			// done with preloading. Start allowing blips and move on to trying
@@ -86,6 +127,7 @@ void run_downshift_sm(void)
 			safe_spark_cut(false);
 			begin_exit_gear_tick = HAL_GetTick();
 			next_downshift_state = ST_D_EXIT_GEAR;
+#endif
 
 #ifdef SHIFT_DEBUG
 			// Debug
@@ -139,6 +181,17 @@ void run_downshift_sm(void)
 				break;
 			}
 
+#ifdef USING_LOADCELL
+			if(!loadcell_data_inaccurate){
+				if(get_loadcell_weight() < loadcell_curr_min_voltage){
+					loadcell_curr_min_voltage = get_loadcell_weight();
+				}
+				else if(get_loadcell_weight() - loadcell_curr_min_voltage > LOADCELL_FORCE_DROP_THRESH_V){
+					begin_enter_gear_tick = HAL_GetTick();
+					next_upshift_state = ST_U_ENTER_GEAR;
+				}
+			}
+#endif
 			// check if this state has timed out
 			if (HAL_GetTick() - begin_exit_gear_tick > DOWNSHIFT_EXIT_TIMEOUT_MS(shift_mode_2))
 			{
@@ -223,6 +276,18 @@ void run_downshift_sm(void)
 #endif
 				break;
 			}
+
+#ifdef USING_LOADCELL
+			if(!loadcell_data_inaccurate){
+				if(get_loadcell_weight() < loadcell_curr_min_voltage){
+					loadcell_curr_min_voltage = get_loadcell_weight();
+				}
+				else if(get_loadcell_weight() - loadcell_curr_min_voltage > LOADCELL_FORCE_DROP_THRESH_V){
+					begin_enter_gear_tick = HAL_GetTick();
+					next_upshift_state = ST_D_EXTRA_PUSH;
+				}
+			}
+#endif
 
 			// check for a timeout entering the gear
 			if (HAL_GetTick() - begin_enter_gear_tick > DOWNSHIFT_ENTER_TIMEOUT_MS(shift_mode_2))
