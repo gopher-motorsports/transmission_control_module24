@@ -428,19 +428,27 @@ gear_t get_current_gear()
 #endif
 }
 
+float gearPos_sim_mm = 0;
+float clutchPos_sim_mm = 0;
+float shiftPotPos_sim_mm = 0;
+float loadcell_sim_lb = 0;
+
 float get_gear_pot_pos(void)
 {
 	return gearPosition_mm.data;
+	//return gearPos_sim_mm;
 }
 
 float get_clutch_pot_pos(void)
 {
 	return clutchPosition_mm.data;
+	//return clutchPos_sim_mm;
 }
 
 float get_shift_pot_pos(void)
 {
 	return shifterPosition_mm.data;
+	//return shiftPotPos_sim_mm;
 }
 float get_loadcell_weight(void){
 	if(tcmLoadcell_lb.data > 220.462)

@@ -14,7 +14,7 @@
 #define TARGET_RPM_TOLERANCE 0.03f
 
 // upshift defines
-#define UPSHIFT_SHIFT_LEVER_PRELOAD_TIMEOUT_MS(x) x ? 30 : 50 //copied auto preload so that it will just fall back to time based, could be tuned
+#define UPSHIFT_SHIFT_LEVER_PRELOAD_TIMEOUT_MS(x) x ? 30 : 50 //copied from open loop preload, room to be tuned
 #define UPSHIFT_SHIFT_LEVER_PRELOAD_TIME_MS(x) x ? 30 : 50 // long preload to get lots of load on the shift lever
 #define UPSHIFT_EXIT_TIMEOUT_MS(x) x ? 25 : 40 // short time to exit. If the shift lever wasn't pushed far enough quickly it is probably stuck
 #define UPSHIFT_EXIT_SPARK_RETURN_MS(x) x ? 10 : 15// we dont want the spark return to be too long
@@ -27,6 +27,7 @@
 #define UPSHIFT_EXTRA_PUSH_TIME_MS(x) x ? 50 : 70
 
 // downshift defines
+#define DOWNSHIFT_SHIFT_LEVER_PRELOAD_TIMEOUT_MS(x) x ? 20 : 40 //copied from open loop preload, room to be tuned
 #define DOWNSHIFT_SHIFT_LEVER_PRELOAD_TIME_MS(x) x ? 20 : 40 // preloads seem to be less important for downshifts as exiting gear is almost always successful
 #define DOWNSHIFT_EXIT_TIMEOUT_MS(x) x ? 30 : 60 // short time to exit. Data shows we can exit pretty easily
 #define DOWNSHIFT_ENTER_TIMEOUT_MS(x) x ? 75 : 125
@@ -85,4 +86,6 @@
 #define MOVING_WHEEL_SPEED_MIN_CUTOFF 2.0f
 #define BUTTON_DEBOUNCE_MS 20
 
+//additional debug Defines
+#define NO_GEAR_POT;
 #endif /* INC_SHIFT_PARAMETERS_H_ */

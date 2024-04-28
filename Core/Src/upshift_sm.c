@@ -18,6 +18,8 @@
 #include <stdbool.h>
 #include <cmsis_os.h>
 
+//float loadcell_sim_lb_local = 0;
+
 // run_upshift_sm
 //  The big boi upshift state machine
 void run_upshift_sm(void)
@@ -30,8 +32,9 @@ void run_upshift_sm(void)
 	static uint32_t begin_exit_gear_spark_return_tick;
 
 #ifdef USING_LOADCELL
-	static uint16_t loadcell_curr_max_pounds;
+	static float loadcell_curr_max_pounds;
 	static bool loadcell_data_inaccurate;
+	static bool drop_occured;
 #endif
 	// calculate the target RPM at the start of each cycle through the loop
 	tcm_data.target_RPM = calc_target_RPM(tcm_data.target_gear);
@@ -71,6 +74,7 @@ void run_upshift_sm(void)
 //Loadcell logic
 #ifdef USING_LOADCELL
 		loadcell_data_inaccurate = false;
+		drop_occured = false;
 #endif
 		break;
 
@@ -88,7 +92,8 @@ void run_upshift_sm(void)
 			}
 
 			else{
-				if (HAL_GetTick() - begin_shift_tick > UPSHIFT_SHIFT_LEVER_PRELOAD_TIMEOUT_MS(shift_mode_2)){
+				uint16_t loadcell_timeout_threshold = UPSHIFT_SHIFT_LEVER_PRELOAD_TIMEOUT_MS(shift_mode_2);
+				if ((HAL_GetTick() - begin_shift_tick) > loadcell_timeout_threshold){
 							loadcell_data_inaccurate = true;
 							begin_exit_gear_tick = HAL_GetTick();
 							safe_spark_cut(true);
@@ -99,18 +104,20 @@ void run_upshift_sm(void)
 
 		else{
 			// wait for the preload time to be over
-			if (HAL_GetTick() - begin_shift_tick > UPSHIFT_SHIFT_LEVER_PRELOAD_TIME_MS(shift_mode_2))
+			uint16_t open_loop_preload_threshold = UPSHIFT_SHIFT_LEVER_PRELOAD_TIME_MS(shift_mode_2);
+			if ((HAL_GetTick() - begin_shift_tick) > open_loop_preload_threshold)
 			{
 				// preload time is over. Start spark cutting to disengage the
 				// gears and moving the RPM to match up with the next gearS
-				begin_exit_gear_tick = HAL_GetTick();
 				safe_spark_cut(true);
+				begin_exit_gear_tick = HAL_GetTick();
 
 				// move on to waiting to exit gear
 				next_upshift_state = ST_U_EXIT_GEAR;
 			}
 		}
 #else //start of non-loadcell code
+		uint16_t open_loop_preload_threshold = UPSHIFT_SHIFT_LEVER_PRELOAD_TIME_MS(shift_mode_2);
 		if (HAL_GetTick() - begin_shift_tick > UPSHIFT_SHIFT_LEVER_PRELOAD_TIME_MS(shift_mode_2))
 		{
 			// preload time is over. Start spark cutting to disengage the
@@ -183,13 +190,19 @@ void run_upshift_sm(void)
 				}
 				else if(loadcell_curr_max_pounds - get_loadcell_weight() > LOADCELL_FORCE_DROP_THRESH_V){
 					begin_enter_gear_tick = HAL_GetTick();
+					drop_occured = true;
+#ifdef LOADCELL_BYPASS_ENTER_GEAR
+					next_upshift_state = ST_U_EXTRA_PUSH;
+#else
 					next_upshift_state = ST_U_ENTER_GEAR;
+#endif
 				}
 			}
 #endif
 			// the shift lever has not moved far enough. Check if it has been
 			// long enough to timeout yet
-			if (HAL_GetTick() - begin_exit_gear_tick > UPSHIFT_EXIT_TIMEOUT_MS(shift_mode_2))
+			uint16_t closed_loop_timeout_threshold_EXIT = UPSHIFT_EXIT_TIMEOUT_MS(shift_mode_2);
+			if (HAL_GetTick() - begin_exit_gear_tick > closed_loop_timeout_threshold_EXIT)
 			{
 				// the shift lever did not exit the previous gear. Attempt to
 				// return spark to attempt to disengage
@@ -210,7 +223,8 @@ void run_upshift_sm(void)
 		}
 		else
 		{
-			if (HAL_GetTick() - begin_exit_gear_tick > UPSHIFT_EXIT_GEAR_TIME_MS(shift_mode_2)) {
+			uint16_t open_loop_timeout_threshold_EXIT = UPSHIFT_EXIT_GEAR_TIME_MS(shift_mode_2);
+			if (HAL_GetTick() - begin_exit_gear_tick > open_loop_timeout_threshold_EXIT) {
 				next_upshift_state = ST_U_ENTER_GEAR;
 				begin_enter_gear_tick = HAL_GetTick();
 
@@ -242,9 +256,10 @@ void run_upshift_sm(void)
 		// enough time has passed return spark anyway
 		if (get_shift_pot_pos() > UPSHIFT_EXIT_POS_MM
 #else
+		uint16_t spark_return_timeout_threshold = UPSHIFT_EXIT_SPARK_RETURN_MS(shift_mode_2);
 		if (tcm_data.current_gear > initial_gear
 #endif
-			|| HAL_GetTick() - begin_exit_gear_spark_return_tick > UPSHIFT_EXIT_SPARK_RETURN_MS(shift_mode_2))
+			|| HAL_GetTick() - begin_exit_gear_spark_return_tick > spark_return_timeout_threshold)
 		{
 
 #ifdef SHIFT_DEBUG
@@ -316,19 +331,21 @@ void run_upshift_sm(void)
 			}
 
 #ifdef USING_LOADCELL
-			if(!loadcell_data_inaccurate){
+			if(!loadcell_data_inaccurate && !drop_occured){
 				if(get_loadcell_weight() > loadcell_curr_max_pounds){
 					loadcell_curr_max_pounds = get_loadcell_weight();
 				}
 				else if(loadcell_curr_max_pounds - get_loadcell_weight() > LOADCELL_FORCE_DROP_THRESH_V){
 					begin_extra_push_tick = HAL_GetTick();
+					drop_occured = true;
 					next_upshift_state = ST_U_EXTRA_PUSH;
 				}
 			}
 #endif
 
 			// check if we are out of time for this state
-			if (HAL_GetTick() - begin_enter_gear_tick > UPSHIFT_ENTER_TIMEOUT_MS(shift_mode_2))
+			uint16_t closed_loop_timeout_threshold_ENTER = UPSHIFT_ENTER_TIMEOUT_MS(shift_mode_2);
+			if (HAL_GetTick() - begin_enter_gear_tick > closed_loop_timeout_threshold_ENTER)
 			{
 				error(SHIFT_STATE_TIMEOUT, &error_byte);
 				// at this point the shift was probably not successful. Note this so we
@@ -355,7 +372,8 @@ void run_upshift_sm(void)
 			// will come back up when this section is over
 			set_spark_cut(true);
 
-			if (HAL_GetTick() - begin_enter_gear_tick > UPSHIFT_ENTER_GEAR_TIME_MS(shift_mode_2))
+			uint16_t open_loop_timeout_threshold_ENTER = UPSHIFT_ENTER_GEAR_TIME_MS(shift_mode_2);
+			if (HAL_GetTick() - begin_enter_gear_tick > open_loop_timeout_threshold_ENTER)
 			{
 				begin_extra_push_tick = HAL_GetTick();
 				next_upshift_state = ST_U_EXTRA_PUSH;
@@ -377,7 +395,8 @@ void run_upshift_sm(void)
 
 		set_upshift_solenoid(SOLENOID_ON);
 
-		if (HAL_GetTick() - begin_extra_push_tick > UPSHIFT_EXTRA_PUSH_TIME_MS(shift_mode_2))
+		uint16_t extra_push_time_threshold = UPSHIFT_EXTRA_PUSH_TIME_MS(shift_mode_2);
+		if (HAL_GetTick() - begin_extra_push_tick > extra_push_time_threshold)
 		{
 			next_upshift_state = ST_U_FINISH_SHIFT;
 		}
@@ -401,6 +420,14 @@ void run_upshift_sm(void)
 		// Determine if the shift was successful by checking if we changed gear correctly
 		tcm_data.successful_shift = tcm_data.current_gear >= initial_gear + 2;
 		tcm_data.gear_established = tcm_data.successful_shift;
+
+#ifdef LOADCELL_UPSHIFT_VALIDATION
+		if(drop_occured){
+			tcm_data.successful_shift = true;
+			tcm_data.gear_established = tcm_data.successful_shift;
+		}
+#endif
+
 		if (tcm_data.successful_shift) {
 			tcm_data.num_successful_shifts += 1;
 		}

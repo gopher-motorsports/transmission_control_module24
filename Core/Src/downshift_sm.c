@@ -29,8 +29,9 @@ void run_downshift_sm(void)
 	static uint32_t begin_hold_clutch_tick;
 
 #ifdef USING_LOADCELL
-	static uint16_t loadcell_curr_min_voltage;
+	static float loadcell_curr_min_voltage;
 	static bool loadcell_data_inaccurate;
+	static bool drop_occured;
 #endif
 
 	// calculate the target rpm at the start of each cycle
@@ -74,6 +75,7 @@ void run_downshift_sm(void)
 
 #ifdef USING_LOADCELL
 		loadcell_data_inaccurate = false;
+		drop_occured = false;
 #endif
 		break;
 
@@ -95,22 +97,24 @@ void run_downshift_sm(void)
 				loadcell_curr_min_voltage = get_loadcell_weight();
 				begin_exit_gear_tick = HAL_GetTick();
 				safe_spark_cut(true);
-				next_upshift_state = ST_D_EXIT_GEAR;
+				next_downshift_state = ST_D_EXIT_GEAR;
 			}
 
 			else{
-				if (HAL_GetTick() - begin_shift_tick > UPSHIFT_SHIFT_LEVER_PRELOAD_TIMEOUT_MS(shift_mode_2)){
+				uint16_t loadcell_timeout_threshold = DOWNSHIFT_SHIFT_LEVER_PRELOAD_TIMEOUT_MS(shift_mode_2);
+				if (HAL_GetTick() - begin_shift_tick > loadcell_timeout_threshold){
 							loadcell_data_inaccurate = true;
 							begin_exit_gear_tick = HAL_GetTick();
 							safe_spark_cut(true);
-							next_upshift_state = ST_D_EXIT_GEAR;
+							next_downshift_state = ST_D_EXIT_GEAR;
 				}
 			}
 		}
 		else{
 			//same code as pre-loadcell code
 			// wait for the preload time to be over
-			if ((HAL_GetTick() - begin_shift_tick > DOWNSHIFT_SHIFT_LEVER_PRELOAD_TIME_MS(shift_mode_2)))
+			uint16_t open_loop_preload_threshold = DOWNSHIFT_SHIFT_LEVER_PRELOAD_TIME_MS(shift_mode_2);
+			if (HAL_GetTick() - begin_shift_tick > open_loop_preload_threshold)
 					{
 						// done with preloading. Start allowing blips and move on to trying
 						// to exit the gear
@@ -188,12 +192,14 @@ void run_downshift_sm(void)
 				}
 				else if(get_loadcell_weight() - loadcell_curr_min_voltage > LOADCELL_FORCE_DROP_THRESH_V){
 					begin_enter_gear_tick = HAL_GetTick();
-					next_upshift_state = ST_U_ENTER_GEAR;
+					drop_occured = true;
+					next_downshift_state = ST_U_ENTER_GEAR;
 				}
 			}
 #endif
 			// check if this state has timed out
-			if (HAL_GetTick() - begin_exit_gear_tick > DOWNSHIFT_EXIT_TIMEOUT_MS(shift_mode_2))
+			uint16_t closed_loop_timeout_threshold_EXIT = DOWNSHIFT_EXIT_TIMEOUT_MS(shift_mode_2);
+			if (HAL_GetTick() - begin_exit_gear_tick > closed_loop_timeout_threshold_EXIT)
 			{
 				error(SHIFT_STATE_TIMEOUT, &error_byte);
 
@@ -218,7 +224,8 @@ void run_downshift_sm(void)
 		}
 		else
 		{
-			if (HAL_GetTick() - begin_exit_gear_tick > DOWNSHIFT_EXIT_GEAR_TIME_MS(shift_mode_2)) {
+			uint16_t open_loop_timeout_threshold_EXIT = DOWNSHIFT_EXIT_GEAR_TIME_MS(shift_mode_2);
+			if (HAL_GetTick() - begin_exit_gear_tick > open_loop_timeout_threshold_EXIT) {
 				next_downshift_state = ST_D_ENTER_GEAR;
 				begin_enter_gear_tick = HAL_GetTick();
 
@@ -278,19 +285,20 @@ void run_downshift_sm(void)
 			}
 
 #ifdef USING_LOADCELL
-			if(!loadcell_data_inaccurate){
+			if(!loadcell_data_inaccurate && !drop_occured){
 				if(get_loadcell_weight() < loadcell_curr_min_voltage){
 					loadcell_curr_min_voltage = get_loadcell_weight();
 				}
 				else if(get_loadcell_weight() - loadcell_curr_min_voltage > LOADCELL_FORCE_DROP_THRESH_V){
-					begin_enter_gear_tick = HAL_GetTick();
-					next_upshift_state = ST_D_EXTRA_PUSH;
+					begin_extra_push_time_tick = HAL_GetTick();
+					next_downshift_state = ST_D_EXTRA_PUSH;
 				}
 			}
 #endif
 
 			// check for a timeout entering the gear
-			if (HAL_GetTick() - begin_enter_gear_tick > DOWNSHIFT_ENTER_TIMEOUT_MS(shift_mode_2))
+			uint16_t closed_loop_timeout_threshold_ENTER = DOWNSHIFT_ENTER_TIMEOUT_MS(shift_mode_2);
+			if (HAL_GetTick() - begin_enter_gear_tick > closed_loop_timeout_threshold_ENTER)
 			{
 				tcm_data.successful_shift = false;
 				error(SHIFT_STATE_TIMEOUT, &error_byte);
@@ -318,8 +326,8 @@ void run_downshift_sm(void)
 		else
 		{
 			// No spark cut without being confident in the trans speed
-
-			if (HAL_GetTick() - begin_enter_gear_tick > DOWNSHIFT_ENTER_GEAR_TIME_MS(shift_mode_2)) {
+			uint16_t open_loop_timeout_threshold_ENTER = DOWNSHIFT_ENTER_GEAR_TIME_MS(shift_mode_2);
+			if (HAL_GetTick() - begin_enter_gear_tick > open_loop_timeout_threshold_ENTER) {
 				begin_extra_push_time_tick = HAL_GetTick();
 				next_downshift_state = ST_D_EXTRA_PUSH;
 				safe_spark_cut(false);
@@ -348,7 +356,8 @@ void run_downshift_sm(void)
 		safe_spark_cut(false);
 
 		// check if we are done giving the extra time TODO Make sure this gets tuned (currently long apparently)
-		if (HAL_GetTick() - begin_hold_clutch_tick > DOWNSHIFT_FAIL_EXTRA_CLUTCH_HOLD(shift_mode_2))
+		uint16_t clutch_hold_time_threshold = DOWNSHIFT_FAIL_EXTRA_CLUTCH_HOLD(shift_mode_2);
+		if (HAL_GetTick() - begin_hold_clutch_tick > clutch_hold_time_threshold)
 		{
 			// done giving the extra clutch. Move on to finishing the shift
 			begin_extra_push_time_tick = HAL_GetTick();
@@ -370,7 +379,8 @@ void run_downshift_sm(void)
 
 		set_downshift_solenoid(SOLENOID_ON);
 
-		if (HAL_GetTick() - begin_extra_push_time_tick > DOWNSHIFT_EXTRA_PUSH_TIME_MS(shift_mode_2))
+		uint16_t extra_push_time_threshold = DOWNSHIFT_EXTRA_PUSH_TIME_MS(shift_mode_2);
+		if (HAL_GetTick() - begin_extra_push_time_tick > extra_push_time_threshold)
 		{
 			next_downshift_state = ST_D_FINISH_SHIFT;
 		}
@@ -396,6 +406,14 @@ void run_downshift_sm(void)
 		// Determine if the shift was successful by checking if we changed gear correctly
 		tcm_data.successful_shift = tcm_data.current_gear <= initial_gear - 2;
 		tcm_data.gear_established = tcm_data.successful_shift;
+
+#ifdef LOADCELL_DOWNSHIFT_VALIDATION
+		if(drop_occured){
+			tcm_data.successful_shift = true;
+			tcm_data.gear_established = tcm_data.successful_shift;
+		}
+#endif
+
 		if (tcm_data.successful_shift) {
 			tcm_data.num_successful_shifts += 1;
 		}

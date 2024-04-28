@@ -125,7 +125,7 @@ void main_loop()
 		send_uart_tick(); // send the current tick over UART every second
 		toggle_heart_beat();
 		checkForErrors();
-		set_DRS_Servo_Position();
+
 		//send CAN params
 		updateAndQueueParams();
 
@@ -150,7 +150,7 @@ void main_loop()
 
 		shifting_task();
 		clutch_task();
-
+		set_DRS_Servo_Position();
 		// Clear the error byte, so it has to keep being triggered if the error is persistent (and doesn't require a function to turn it off again)
 		error_byte = 0;
 }

@@ -33,8 +33,8 @@
 #define DRS_POS_15 23749
 #define DRS_POS_16 24999
 
-#define OPEN_POS 25919 //86.4% duty cycle
-#define CLOSED_POS 18959 //63.2% duty cycle
+#define OPEN_POS 18959 //63.2% duty cycle
+#define CLOSED_POS 25919 //86.4% duty cycle
 
 void init_DRS_servo(TIM_HandleTypeDef* timer_address, U32 channel);
 void set_DRS_Servo_Position();
