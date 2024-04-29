@@ -254,9 +254,9 @@ void run_upshift_sm(void)
 		// the shifter has moved above the threshold of exiting the gear. Spark
 		// must be cut again to reach the correct RPM for the next gear. If
 		// enough time has passed return spark anyway
+		uint16_t spark_return_timeout_threshold = UPSHIFT_EXIT_SPARK_RETURN_MS(shift_mode_2);
 		if (get_shift_pot_pos() > UPSHIFT_EXIT_POS_MM
 #else
-		uint16_t spark_return_timeout_threshold = UPSHIFT_EXIT_SPARK_RETURN_MS(shift_mode_2);
 		if (tcm_data.current_gear > initial_gear
 #endif
 			|| HAL_GetTick() - begin_exit_gear_spark_return_tick > spark_return_timeout_threshold)

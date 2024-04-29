@@ -87,5 +87,5 @@
 #define BUTTON_DEBOUNCE_MS 20
 
 //additional debug Defines
-#define NO_GEAR_POT;
+#define NO_GEAR_POT
 #endif /* INC_SHIFT_PARAMETERS_H_ */
