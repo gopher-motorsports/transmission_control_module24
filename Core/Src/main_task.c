@@ -126,9 +126,6 @@ void main_loop()
 		toggle_heart_beat();
 		checkForErrors();
 
-		//send CAN params
-		updateAndQueueParams();
-
 #ifdef NO_GEAR_POT
 	if (HAL_GetTick() - last_gear_update >= GEAR_UPDATE_TIME_MS)
 	{
@@ -153,6 +150,9 @@ void main_loop()
 		set_DRS_Servo_Position();
 		// Clear the error byte, so it has to keep being triggered if the error is persistent (and doesn't require a function to turn it off again)
 		error_byte = 0;
+
+		//send CAN params
+		updateAndQueueParams();
 }
 
 
