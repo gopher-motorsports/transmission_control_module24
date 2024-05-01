@@ -41,7 +41,7 @@
 #define IC_TIMER &htim2
 #define HDMA_CHANNEL 1
 #define IC_CONVERSION_RATIO 2.0f //(X pulses / 1 sec) * (60 sec / 1 min) * (1 rev / 30 pulses) = RPM, so conversion ration would be 60/30 = 2.
-#define DMA_STOPPED_TIMEOUT_MS 60
+#define DMA_STOPPED_TIMEOUT_MS 1000
 #define USE_VAR_SS true
 #define IC_LOW_SAMPLES 100
 #define IC_HIGH_SAMPLES 1000
@@ -61,6 +61,7 @@ DMA_HandleTypeDef hdma_adc1;
 CAN_HandleTypeDef hcan2;
 
 TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim10;
 TIM_HandleTypeDef htim11;
 DMA_HandleTypeDef hdma_tim2_ch1;
@@ -83,6 +84,7 @@ static void MX_USART1_UART_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM11_Init(void);
 static void MX_CAN2_Init(void);
+static void MX_TIM3_Init(void);
 void task_MainTask(void const * argument);
 void task_BufferHandling(void const * argument);
 
@@ -151,6 +153,7 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM11_Init();
   MX_CAN2_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start(&htim11);
   //HAL_TIM_Base_Start(&htim2);
@@ -170,7 +173,7 @@ int main(void)
    );
 
   //DRS Setup:
-  init_DRS_servo(&htim2, TIM_CHANNEL_4);
+  init_DRS_servo(&htim3, TIM_CHANNEL_4);
 
   // Set initial output states to low because of strange behavior when this doesn't happen and pins go through the 3V3 to 5V converter.
   HAL_GPIO_WritePin(SPK_CUT_GPIO_Port, SPK_CUT_Pin, 1);
@@ -415,7 +418,6 @@ static void MX_TIM2_Init(void)
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
   TIM_IC_InitTypeDef sConfigIC = {0};
-  TIM_OC_InitTypeDef sConfigOC = {0};
 
   /* USER CODE BEGIN TIM2_Init 1 */
 
@@ -423,7 +425,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 8-1;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 29999;
+  htim2.Init.Period = 0xffffffff;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -436,10 +438,6 @@ static void MX_TIM2_Init(void)
     Error_Handler();
   }
   if (HAL_TIM_IC_Init(&htim2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_PWM_Init(&htim2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -457,18 +455,58 @@ static void MX_TIM2_Init(void)
   {
     Error_Handler();
   }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+
+}
+
+/**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 8-1;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 29999;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
   sConfigOC.Pulse = 0;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
+  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN TIM2_Init 2 */
+  /* USER CODE BEGIN TIM3_Init 2 */
 
-  /* USER CODE END TIM2_Init 2 */
-  HAL_TIM_MspPostInit(&htim2);
+  /* USER CODE END TIM3_Init 2 */
+  HAL_TIM_MspPostInit(&htim3);
 
 }
 

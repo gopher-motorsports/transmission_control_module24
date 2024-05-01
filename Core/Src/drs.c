@@ -101,12 +101,17 @@ void set_DRS_Servo_Position(){
 	drs_button_state = swButon3_state.data; //place holder button
 	check_DRS_current(&drs_power_channel);
 	if(drs_button_state == 1){
+#ifdef DRS_SHUTDOWN_CHECKS
 		if(drs_shutoff_conditions_reached()){
 			__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, CLOSED_POS);
 		}
 		else{
 		__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, OPEN_POS);
 		}
+#else
+		__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, OPEN_POS);
+#endif
+
 	}
 	else{
 		__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, CLOSED_POS);
