@@ -6,6 +6,7 @@
 
 #include "GopherCAN.h"
 #include "gopher_sense.h"
+#include <stdbool.h>
 
 #define FAST_CLUTCH_BUTTON (swFastClutch_state.data)
 #define SLOW_CLUTCH_BUTTON (swSlowClutch_state.data)
@@ -14,6 +15,8 @@
 #define UPSHIFT_BUTTON (swUpshift_state.data)
 #define DOWNSHIFT_BUTTON (swDownshift_state.data)
 
+#define DRS_IN_START_UP true
+#define DRS_OUT_OF_START_UP false
 // Use this to define what module this board will be
 #define PRINTF_HB_MS_BETWEEN 1000
 #define HEARTBEAT_MS_BETWEEN 500
@@ -25,8 +28,8 @@
 #define SHIFT_TIMEOUT_FAULT_LED_MS 1000
 
 //#define AUTO_SHIFT_LEVER_RETURN
-#define CAN_CLUTCHLESS_DOWNSHIFT
-#define CAN_CHANGE_FROM_TIME_SHIFT
+//#define CAN_CLUTCHLESS_DOWNSHIFT
+//#define CAN_CHANGE_FROM_TIME_SHIFT
 //#define SHIFT_DEBUG
 //#define RUN_TIME_STATS
 //#define SMART_SLOW_CLUTCH
@@ -69,6 +72,17 @@ typedef enum
 	ST_D_EXTRA_PUSH,
 	ST_D_FINISH_SHIFT
 } Downshift_States_t;
+
+typedef enum
+{
+	NEUTRAL_AUTO_STATE = 0,
+	GEAR_1_AUTO_STATE,
+	GEAR_2_AUTO_STATE,
+	GEAR_3_AUTO_STATE,
+	GEAR_4_AUTO_STATE,
+	GEAR_5_AUTO_STATE
+
+} Autoshift_States_t;
 
 //shared variables between files
 extern float shift_mode_2;

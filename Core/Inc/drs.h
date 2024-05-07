@@ -37,7 +37,8 @@
 #define CLOSED_POS 25660 //86.4% duty cycle
 
 //constants for smart shutoff when cornering
-#define BRAKE_SHUTOFF_THRESHOLD 10 //10 psi
+#define BRAKE_SHUTOFF_THRESHOLD 25 //10 psi
+#define DRS_SHUTDOWN_CHECKS
 
 #define STEERING_ANGLE_LEFT_SHUTOFF 75 //0-210 deg is full, 105 is center
 #define STEERING_ANGLE_LEFT_RETURN 90
@@ -68,5 +69,5 @@ typedef struct {
 } POWER_CHANNEL;
 
 void init_DRS_servo(TIM_HandleTypeDef* timer_address, U32 channel);
-void set_DRS_Servo_Position();
+void set_DRS_Servo_Position(U8 start_up_condition);
 #endif /* INC_DRS_H_ */

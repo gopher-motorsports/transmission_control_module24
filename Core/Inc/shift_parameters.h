@@ -64,12 +64,19 @@
 #define GEAR_5_TRANS_RATIO 2.60f
 
 #define GEAR_POS_MARGIN_mm 0.06
-#define NEUTRAL_DISTANCE_mm 2.60 // 2.601 for down
-#define GEAR_1_DISTANCE_mm 2.482 // 2.485 for down
-#define GEAR_2_DISTANCE_mm 2.297 // 2.300 for down
-#define GEAR_3_DISTANCE_mm 1.955 // 1.945 for down
-#define GEAR_4_DISTANCE_mm 1.639 // 1.633 for down
-#define GEAR_5_DISTANCE_mm 1.270
+#define NEUTRAL_DISTANCE_mm 1.958 //1.960, 1.957
+#define GEAR_1_DISTANCE_mm 1.851 //1.868, 1.833
+#define GEAR_2_DISTANCE_mm 1.641 //1.643, 1.639
+#define GEAR_3_DISTANCE_mm 1.272 // 1.945 for down 1.278, 1.266
+#define GEAR_4_DISTANCE_mm 0.942 // 1.633 for down, .940, .944
+#define GEAR_5_DISTANCE_mm 0.558 // .559, .556
+
+#define NEUTRAL_MARGIN_mm 0.0500 //added some margin cause of instability
+#define GEAR_1_MARGIN_mm  0.0268
+#define GEAR_2_MARGIN_mm  0.0525
+#define GEAR_3_MARGIN_mm  0.0825
+#define GEAR_4_MARGIN_mm  0.0825
+#define GEAR_5_MARGIN_mm  0.096
 
 //Loadcell defines
 #define LOADCELL_PRELOAD_UPSHIFT_THRESH_V 20.0f  //20 pounds of push, corresponds to .2V increase from 1.65V
@@ -87,5 +94,5 @@
 #define BUTTON_DEBOUNCE_MS 20
 
 //additional debug Defines
-#define NO_GEAR_POT
+//#define NO_GEAR_POT
 #endif /* INC_SHIFT_PARAMETERS_H_ */

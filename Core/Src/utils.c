@@ -27,6 +27,14 @@ const float GEAR_POT_DISTANCES_mm[] = {
 		GEAR_5_DISTANCE_mm
 };
 
+const float GEAR_POS_MARGINS_mm[] = {
+		NEUTRAL_MARGIN_mm,
+		GEAR_1_MARGIN_mm,
+		GEAR_2_MARGIN_mm,
+		GEAR_3_MARGIN_mm,
+		GEAR_4_MARGIN_mm,
+		GEAR_5_MARGIN_mm
+};
 float rpm_arr[RPM_ARRAY_SIZE] = {0};
 uint32_t rpm_idx = 0;
 
@@ -416,8 +424,8 @@ gear_t get_current_gear()
 	// distance minus the margin (0.1mm)
 	float gear_position = get_gear_pot_pos();
 	for(int i = 0; i < NUM_GEARS / 2; i++) {
-		if (gear_position >= GEAR_POT_DISTANCES_mm[i] - GEAR_POS_MARGIN_mm) {
-			if (gear_position >= GEAR_POT_DISTANCES_mm[i] + GEAR_POS_MARGIN_mm) {
+		if (gear_position >= GEAR_POT_DISTANCES_mm[i] - GEAR_POS_MARGINS_mm[i]) {
+			if (gear_position >= GEAR_POT_DISTANCES_mm[i] + GEAR_POS_MARGINS_mm[i]) {
 				return (gear_t)(i * 2 - 1);
 			}
 			return (gear_t)(i * 2);

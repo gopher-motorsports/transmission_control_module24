@@ -141,13 +141,16 @@ void main_loop()
 
 		if (!initial_input_skip) {
 			check_driver_inputs();
+			set_DRS_Servo_Position(DRS_OUT_OF_START_UP);
 		} else if (HAL_GetTick() - initialization_start_time_ms > 2000) {
 			initial_input_skip = false;
+		} else{
+			set_DRS_Servo_Position(DRS_IN_START_UP);
 		}
+
 
 		shifting_task();
 		clutch_task();
-		set_DRS_Servo_Position();
 		// Clear the error byte, so it has to keep being triggered if the error is persistent (and doesn't require a function to turn it off again)
 		error_byte = 0;
 
@@ -208,7 +211,7 @@ static float last_clutchlessDownshift_button = 0;
 static void check_driver_inputs() {
 	tcm_data.sw_fast_clutch = FAST_CLUTCH_BUTTON;
 	tcm_data.sw_slow_clutch = SLOW_CLUTCH_BUTTON;
-
+	tcm_data.time_shift_only = 1;
 #ifdef CAN_CHANGE_FROM_TIME_SHIFT
 	if((last_timeShiftOnly_button == 0) && (TIME_SHIFT_ONLY_BUTTON == 1)) {
 		tcm_data.time_shift_only = !tcm_data.time_shift_only;

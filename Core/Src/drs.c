@@ -89,7 +89,7 @@ void check_DRS_current(POWER_CHANNEL* channel){
 	}
 }
 
-void set_DRS_Servo_Position(){
+void set_DRS_Servo_Position(U8 start_up_condition){
 	//duty cycle lookup table for each DRS position, optional if we are using the rotary dial
 	static int DRS_POS_LUT[] = {DRS_POS_0, DRS_POS_1, DRS_POS_2, DRS_POS_3, DRS_POS_4,
 	                            DRS_POS_5, DRS_POS_6, DRS_POS_7, DRS_POS_8, DRS_POS_9,
@@ -98,25 +98,30 @@ void set_DRS_Servo_Position(){
 	rot_dial_timer_val = DRS_POS_LUT[swDial_a_ul.data]; //instead of setting open or closed we could set to a specific location
 
 
-	drs_button_state = swButon3_state.data; //place holder button
+	drs_button_state = swButon0_state.data; //place holder button
 	check_DRS_current(&drs_power_channel);
-	if(drs_button_state == 1){
-#ifdef DRS_SHUTDOWN_CHECKS
-		if(drs_shutoff_conditions_reached()){
-			__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, CLOSED_POS);
-		}
-		else{
-		__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, OPEN_POS);
-		}
-#else
-		__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, OPEN_POS);
-#endif
-
+	if(start_up_condition){
+			__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, OPEN_POS);
 	}
 	else{
-		__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, CLOSED_POS);
-	}
+		if(drs_button_state == 1){
+#ifdef DRS_SHUTDOWN_CHECKS
+			if(drs_shutoff_conditions_reached()){
+				__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, CLOSED_POS);
+			}
+			else{
+			__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, OPEN_POS);
+			}
+#else
+			__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, OPEN_POS);
+#endif
 
+		}
+		else{
+			__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, CLOSED_POS);
+		}
+
+	}
 	drs_steering_angle_limit_state = next_steering_angle_limit_state;
 }
 
@@ -132,7 +137,7 @@ bool drs_shutoff_conditions_reached(){
 	   		return true;
 	   	}
 	}
-
+/*
 	if(current_tick - steeringAngle_deg.info.last_rx < CAN_VALUE_TRUST_THRESHOLD){
 		switch (drs_steering_angle_limit_state)
 			{
@@ -167,6 +172,7 @@ bool drs_shutoff_conditions_reached(){
 				break;
 		}
 	}
+	*/
 	//reaches here if all of the data is not being updated on the can bus
 	return false;
 
